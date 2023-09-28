@@ -113,6 +113,7 @@ module Data.IntMap.Strict (
     , insertWith
     , insertWithKey
     , insertLookupWithKey
+    , insertMap
 
     -- * Deletion\/Update
     , delete

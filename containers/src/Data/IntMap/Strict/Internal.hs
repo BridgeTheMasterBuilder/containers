@@ -113,6 +113,7 @@ module Data.IntMap.Strict.Internal (
     , insertWith
     , insertWithKey
     , insertLookupWithKey
+    , insertMap
 
     -- * Deletion\/Update
     , delete
@@ -490,7 +491,22 @@ insertLookupWithKey f0 !k0 x0 t0 = toPair $ go f0 k0 x0 t0
           | k==ky         -> (Just y :*: (Tip k $! f k x y))
           | otherwise     -> (Nothing :*: link k (singleton k x) ky t)
         Nil -> Nothing :*: (singleton k x)
+        
+insertMapWithKey :: (Key -> b -> a -> a) -> (Key -> b -> a) -> Key -> b -> IntMap a -> IntMap a
+insertMapWithKey f1 f2 !k x t =
+  case t of
+    Bin p m l r
+      | nomatch k p m -> link k (singleton k (f2 k x)) p t
+      | zero k m      -> Bin p m (insertMapWithKey f1 f2 k x l) r
+      | otherwise     -> Bin p m l (insertMapWithKey f1 f2 k x r)
+    Tip ky y
+      | k==ky         -> Tip k $! f1 k x y
+      | otherwise     -> link k (singleton k (f2 k x)) ky t
+    Nil -> singleton k (f2 k x)
 
+insertMap :: (b -> a -> a) -> (b -> a) -> Key -> b -> IntMap a -> IntMap a
+insertMap f1 f2 k x t
+  = insertMapWithKey (\_ x' y' -> f1 x' y') (\_ x' -> f2 x') k x t
 
 {--------------------------------------------------------------------
   Deletion
